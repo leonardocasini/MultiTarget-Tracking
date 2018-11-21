@@ -10,15 +10,18 @@ import gzip
 def load(filename):
     """Loads a compressed object from disk
     """
-    file = gzip.GzipFile(filename, 'rb')
-    buffer = ""
-    while True:
-        data = file.read()
-        if data == "":
-            break
-        buffer += data
-    object = pickle.loads(buffer)
-    file.close()
+    fp=gzip.open(filename,'rb') # This assumes that primes.data is already packed with gzip
+    object=pickle.load(fp, encoding='latin1')
+ 
+    # file = gzip.open(filename, 'r')
+    # buffer = ""
+    # while True:
+    #     data = file.read()
+    #     if data == "":
+    #         break
+    #     buffer += data
+    # object = pickle.load(buffer, encoding='latin1')
+    # file.close()
     return object
 
 
@@ -33,7 +36,7 @@ class KittiAnnotation:
         self.img_paths = sorted(glob(imgpath + '/*.png'))
 
         # read annotations
-        with open(filepath, 'rb') as f:
+        with open(filepath, 'r') as f: #open('sample.csv', "rt", encoding=<theencodingofthefile>)
             reader = csv.reader(f)
             l = list(reader)
         self.annotations = [x[0].split() for x in l]
@@ -80,11 +83,14 @@ class KittiAnnotation:
                                              [x['score'] for x in mask_and_dets])
                 if 'masks' in data:
                     data_to_yield['masks'] = [x['mask'] for x in mask_and_dets]
-
+                if 'feats' in data:
+                    data_to_yield['feats'] = [x['feats'] for x in mask_and_dets]
                 yield data_to_yield
             if not loop:
                 is_looping = False
             else:
-                print 'Starting again from the beginning...'
+                print ('Starting again from the beginning...')
         # we have reached the end of the video
-        yield [None] * len(data)
+
+        yield None
+        #yield [None] * len(data)
