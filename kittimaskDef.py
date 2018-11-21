@@ -10,7 +10,6 @@ import random
 import motmetrics as mm
 import time
 
-acc = mm.MOTAccumulator(auto_id=True)
 def getBestIou(G,Arrays):
     selectedBox = None
     bestIou = 0
@@ -109,8 +108,6 @@ def findTracksM(box,listOfTracksM):
             found = k
 
     return found 
-
-
 class Track:
   def __init__(self,id = None,frame = None):
 
@@ -127,14 +124,6 @@ class Track:
     if self.countNoMatch > 2:
         print('traccia',self.id,'morta')
         self.state = 'death'
-
-
-
-
-
-
-            
- #def getColor(track_id):
 
 # Malisiewicz et al.
 def non_max_suppression_fast(boxes, overlapThresh):
@@ -193,17 +182,6 @@ def non_max_suppression_fast(boxes, overlapThresh):
     # integer data type
     return pick #.astype("int")
 
-
-
-def get_colormap(N):
-    cm = plt.cm.get_cmap(None, N)
-    colors = [cm(x) for x in range(N)]
-    for i in range(N):
-        colors[i] = [x * 255 for x in colors[i][:3]]
-    # randomize colormap
-    shuffle(colors)
-    return colors
-
 def vis_mask(img, mask,width,height, col, alpha=0.4, show_border=True, border_thick= -1):
     """Visualizes a single binary mask."""
 
@@ -220,8 +198,6 @@ def vis_mask(img, mask,width,height, col, alpha=0.4, show_border=True, border_th
         #cv2.drawContours(c, contours, -1, 1, border_thick, cv2.LINE_AA)
 
     return img.astype(np.uint8)
-
-
 
 def main():
 
@@ -259,9 +235,6 @@ def main():
 
     currentIDMask = 0
 
-
-    
-
     while True:
         print ('inizio frame',nCiclo)
         cur_data = next(gen)
@@ -284,19 +257,11 @@ def main():
             cur_gt_track_ids = []
             for track_id in annot.keys():
                 box, obj_type = annot[track_id]
-                # PredictionBoxes.append([box,track_id])
                 if track_id not in listObjects:
                     listObjects.append(track_id) 
-                #cv2.rectangle(img, (box[0], box[1]), (box[2], box[3]), 1, thickness=4)
-
                 a = np.zeros((height,width))
-                #cv2.rectangle(a,(box[0], box[1]), (box[2], box[3]),1, thickness = -1)
-                #cv2.putText(img,track_id,(box[0], box[1]), cv2.FONT_HERSHEY_SIMPLEX, 1.5, colors_tracks[int(track_id)], 2)
                 tmp.append({'track_id': track_id, 'box': box}) 
-                #obj_type
-
-        # dets
-
+                
         if 'dets' in cur_data.keys():
             dets = cur_data['dets']
             new_bs = []
@@ -313,7 +278,6 @@ def main():
             tmp = []
             i = 0
             masks = cur_data['masks']
-            #print('EEEEEEEEOOOOOOOOOOOOOOOO', masks)
             for mask in masks:
                 #img,c = vis_mask(img, mask,width,height, (0, 0, 255))
                 if i in new_bs:
@@ -341,16 +305,12 @@ def main():
                             listTrackUpdated.append(k) 
                         #Match
                         if m > Iou_Treshold:
-                            
                             # se esiste una traccia attiva l aggiorna
                             if (k >= 0) and ((listTracksM[k].state == 'active') or (listTracksM[k].state == 'new')):
                                 box = tmp[c].astype(np.uint8)
                                 listTracksM[k].boxes.append(box)
                                 t.sequence.append(c)
                                 img = vis_mask(img, box,width,height, listTracksM[k].color)
-                                #cv2.rectangle(img,(box[0], box[1]), (box[2], box[3]),listTracks[k].color, thickness = 3)
-                                #cv2.putText(img,str(listTracks[k].id),(box[0], box[1]), cv2.FONT_HERSHEY_SIMPLEX, 1, listTracks[k].color, 2)
-                            #altrimenti ne crea una 
                             else:
                                 t = Track(currentIDMask,nCiclo)
                                 currentIDMask = currentIDMask + 1
@@ -361,68 +321,18 @@ def main():
                                 t.sequence.append(c)
                                 listTracksM.append(t)
                                 img = vis_mask(img, box,width,height,t.color)
-                                #cv2.rectangle(img,(box[0], box[1]), (box[2], box[3]),t.color, thickness = 3)
-                            #cv2.putText(img,str(currentID-1),(box[0], box[1]), cv2.FONT_HERSHEY_SIMPLEX, 1.5, colors_tracks[int(currentID-1)], 2)
-                        
-
+           
                     for i in range(len(listTracks)):
                             if (i not in listTrackUpdated) and (listTracks[i].state == 'active'):
                                 listTracks[i].delete()
 
 
             pastmask = tmp
-        
-
-            # if nCiclo>0:
-            #     tracker_active_tracks_ids = []
-            #     tracker_prev_boxes  = []
-            #     for i in range(len(listTracksM)):
-            #         if listTracksM[i].state == 'active' or listTracksM[i] == 'new':
-            #             print('id traccia attiva',listTracksM[i].id, listTracksM[i].state
-            #                 )
-            #             tracker_prev_boxes.append(listTracksM[i].boxes[len(listTracksM[i].boxes)-1])
-            #             tracker_active_tracks_ids.append((listTracksM[i].id))
-
-            #     predictboxes_for_metrics = []
-            #     for i in range(len(tmp)):
-            #         predictboxes_for_metrics.append(tmp[i]['box'])
-
-            #     dist_mat = mm.distances.iou_matrix(predictboxes_for_metrics, tracker_prev_boxes, max_iou= 1)
-            #     acc.update(cur_gt_track_ids, tracker_active_tracks_ids, dist_mat)
-
-
-
         cv2.imshow('img',img)
         cv2.waitKey(1)
         nCiclo = nCiclo+1
-        #pickle.dump( listTracksM,open('database/listTrackPredicted' + video_id +'.db', "wb" ))
-        #print 'fine frame'
-    print ('fine')
-    print (nCiclo)
     pickle.dump(listTracksM, open( 'database/listMask' + video_id +'.db', "wb" ) )
 if __name__ == ' __main__ ':
     main()
 
-
-
-
 main()
-
-
-
-
-
-         
-
-
-
-
-
-
-
-
-
-
-
-
-
