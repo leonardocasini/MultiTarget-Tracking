@@ -11,6 +11,8 @@ The implementation has been done with the programming language Python 3.
 
 Requirement | Version Used
 ------------| ------------
-Python | 2.7
-Numberjack | 1.2.0  
+Python | 3.6
+matplotlib | 2.2.2  
 numpy |  1.14.5 
+motmetrics | 1.1.3
+opencv-python | 3.4.3.18 
