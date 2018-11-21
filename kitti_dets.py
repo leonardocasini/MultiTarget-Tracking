@@ -8,7 +8,6 @@ import csv
 import pickle
 import random
 import motmetrics as mm
-import csv
 
 
 def bb_intersection_over_union(boxA, boxB):
