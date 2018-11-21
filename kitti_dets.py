@@ -265,44 +265,38 @@ def main():
                             cv2.putText(img,str(listTracks[i].id),(box[0], box[1]), cv2.FONT_HERSHEY_SIMPLEX, 1, listTracks[i].color, 2)
                             listTracks[i].delete()
                 pastboxes = currentboxes
+        
         if nIteration>0:
+            #List of Track id with state active or new 
             tracker_active_tracks_ids = []
+            #Array of the last box saved in track 
             tracker_prev_boxes  = []
             for i in range(len(listTracks)):
                 if listTracks[i].state == 'active' or listTracks[i] == 'new':
-                    print('id traccia attiva',listTracks[i].id, listTracks[i].state
-                        )
-                    tracker_prev_boxes.append(listTracks[i].boxes[len(listTracks[i].boxes)-1])
+                    tracker_prev_boxes.append(listTracks[i].boxes[-1])
                     tracker_active_tracks_ids.append((listTracks[i].id))
-
-            
+            #Array of ground truth boxes
             predictboxes_for_metrics = []
             for i in range(len(tmp)):
                 predictboxes_for_metrics.append(tmp[i]['box'])
-            
-            print(len(tracker_prev_boxes))
-
+            #Matrix of distance between ground truth boxes and track boxes
             dist_mat = mm.distances.iou_matrix(predictboxes_for_metrics, tracker_prev_boxes, max_iou= 1)
+            #Updating acc
             acc.update(cur_gt_track_ids, tracker_active_tracks_ids, dist_mat)
 
-        #cv2.imshow('img', img)
-        cv2.imshow('img',img)
-        #cv2.waitKey(int(1000/FPS))
+        cv2.imshow('img',img) 
         cv2.waitKey(1)
         nIteration = nIteration+1
-        #print 'fine frame'
 
-    print ('fine')
-
-    print('traccie',len(listTracks))
+    #All tracks calculated are saved into a database
     pickle.dump(listTracks, open( 'database/listDetections' + video_id +'.db', "wb" ) )
+    #Calculate metrics of accuracy
     mh = mm.metrics.create()
     summary = mh.compute(acc, metrics=['num_frames', 'mota', 'motp',
                 'num_fragmentations', 'num_switches', 'num_false_positives',
                 'num_misses', 'mostly_tracked', 'partially_tracked',
                 'mostly_lost', 'precision', 'recall'], name='acc')
-    print(summary['num_frames']['acc'])
-
+    #Save this metrics into a file csv with video_id and the parameters of evaluations('Iou_Treshold','Score_treshHold')  
     with open('table_results.csv', 'a') as csvfile:
         fieldnames = ['videoID','Iou_Treshold','Score_treshHold','num_frames', 'mota', 'motp',
                 'num_fragmentations', 'num_switches', 'num_false_positives',
@@ -313,17 +307,13 @@ def main():
             'num_fragmentations':summary['num_fragmentations']['acc'],'num_switches':summary['num_switches']['acc'],
             'num_false_positives':summary['num_false_positives']['acc'],'num_misses':summary['num_misses']['acc'],
             'mostly_tracked':summary['mostly_tracked']['acc'],'partially_tracked':summary['partially_tracked']['acc'],'mostly_lost':summary['mostly_lost']['acc'],
-            'precision':summary['precision']['acc'],'recall': summary['recall']['acc']})
-
-     
+            'precision':summary['precision']['acc'],'recall': summary['recall']['acc']})     
 
 if __name__ == ' __main__ ':
     main()
 
-
-
-
-
+#For starting program remove hashtag from main()
+#main()
 
 
 
