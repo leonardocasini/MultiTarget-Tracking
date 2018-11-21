@@ -159,9 +159,12 @@ def main():
     gen = annot.annot_generator(data=data_from_generator, loop=False)
 
     #Parameters of analisys
-    Iou_Treshold = input("Select a theshHold value for the IoU [0,1]? ")
-    Score_treshHold = input("Select a theshHold value for the score of prediction boxes [0,1]? ")
-    noMatchAllowed = input("Select the maximum value for countNoMatch value [0,4]? ")
+    It = input("Select a theshHold value for the IoU [0,1]? ")
+    Iou_Treshold = float(It)
+    st = input("Select a theshHold value for the score of prediction boxes [0,1]? ")
+    Score_treshHold = float(st)
+    nma = input("Select the maximum value for countNoMatch value [0,4]? ")
+    noMatchAllowed = float(nma)
 
     #Initialization 
     nIteration = 0
