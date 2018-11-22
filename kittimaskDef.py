@@ -10,67 +10,14 @@ import random
 import motmetrics as mm
 import time
 
-def getBestIou(G,Arrays):
-    selectedBox = None
-    bestIou = 0
-    for k in range(len(Arrays)):
-            B = Arrays[k]['img']
-            Iou = getIntersectionOverUnion(G,B)
-            if Iou > bestIou:
-                bestIou = Ioub
-                selectedBox = k
-                centroid = Arrays[k]['centroid']
-    return selectedBox,bestIou,centroid
-
-
-def GetBestIouMask(G,M):
-    selectMask = None
-    bestIou = 0
-    for k in range(len(M)):
-        B = M[k]['img']
-        Iou = getIntersectionOverUnion(G,B)
-        if Iou > bestIou:
-                bestIou = Iou
-                selectMask = k
-
-    return selectMask,bestIou
-def bb_intersection_over_union(boxA, boxB):
-    # determine the (x, y)-coordinates of the intersection rectangle
-    xA = max(boxA[0], boxB[0])
-    yA = max(boxA[1], boxB[1])
-    xB = min(boxA[2], boxB[2])
-    yB = min(boxA[3], boxB[3])
- 
-    # compute the area of intersection rectangle
-    interArea = max(0, xB - xA + 1) * max(0, yB - yA + 1)
- 
-    # compute the area of both the prediction and ground-truth
-    # rectangles
-    boxAArea = (boxA[2] - boxA[0] + 1) * (boxA[3] - boxA[1] + 1)
-    boxBArea = (boxB[2] - boxB[0] + 1) * (boxB[3] - boxB[1] + 1)
- 
-    # compute the intersection over union by taking the intersection
-    # area and dividing it by the sum of prediction + ground-truth
-    # areas - the interesection area
-    iou = interArea / float(boxAArea + boxBArea - interArea)
- 
-    # return the intersection over union value
-    return iou
-
-def confronto(A,B):
+def createMatrixMasks(A,B):
     tmp = np.zeros((len(A),len(B)))
     for i in range(len(A)):
         for j in range(len(B)):
-            tmp[i,j] = bb_intersection_over_union(A[i],B[j])
-    return tmp
-
-def confrontoMask(A,B):
-    tmp = np.zeros((len(A),len(B)))
-    for i in range(len(A)):
-        for j in range(len(B)):
+            #Intersection over Union calculate with logical operation
             tmp[i,j] = np.sum(np.logical_and(A[i], B[j])) / np.sum(np.logical_or(A[i], B[j])).astype(np.float)
-            print("AOOOOOOOOO",tmp)
     return tmp
+
 def getMaximumValue(A):
     maxV = -1
     for i in range(len(A)):
@@ -79,7 +26,6 @@ def getMaximumValue(A):
                 maxV = A[i][j]
                 row = i
                 col = j
-    
     eraseColumnAndRow(A,row,col) 
     return maxV,row,col
 
@@ -89,40 +35,29 @@ def eraseColumnAndRow(A,r,c):
     for j in range(len(A[0])):#riga
         A[r][j] = 0
     
-
-def findTracks(box,listOfTracks):
-    #print box, listOfTracks
-    found = -1 
-    for k in range(len(listOfTracks)):
-        #print listTracks[k].boxes[len(listTracks[k].boxes) - 1]
-        if box == listTracks[k].boxes[len(listTracks[k].boxes) - 1]:
-            found = k
-
-    return found 
-
-def findTracksM(box,listOfTracksM):
-    #print box, listOfTracks
+def findTracks(mask,listOfTracksM):
     found = -1 
     for k in range(len(listOfTracksM)):
-        if (box == listOfTracksM[k].boxes[len(listOfTracksM[k].boxes) - 1]).all():
+        if (mask == listOfTracksM[k].masks[len(listOfTracksM[k].masks) - 1]).all():
             found = k
-
     return found 
+
 class Track:
   def __init__(self,id = None,frame = None):
 
     self.id = id
     self.frame = frame
     self.sequence = []
-    self.boxes = []
+    self.masks = []
     self.color = tuple([int(x) for x in np.random.choice(range(256), size=3)])
     self.countNoMatch = 0
     self.state = 'new'
 
+  #This function return the index of track in listTrack 
+  #if the last mask saved is equal the selected mask
   def delete(self):
     self.countNoMatch = self.countNoMatch + 1 
     if self.countNoMatch > 2:
-        print('traccia',self.id,'morta')
         self.state = 'death'
 
 # Malisiewicz et al.
@@ -201,67 +136,43 @@ def vis_mask(img, mask,width,height, col, alpha=0.4, show_border=True, border_th
 
 def main():
 
+    #Change the path for your dataset
     dataset_path = '/Users/andreasimioni/Desktop/kitti/kitti5'
+    #Select id of video
     video_id = '0004'
     file_path = dataset_path + '/label_02/' + video_id + '.txt'
     img_path = dataset_path + '/image_02/' + video_id
+    
     annot = KittiAnnotation(file_path, img_path)
-    listTracks = []
-    listTracksM  = []
-    groundTracks = [] 
-    Iou_Treshold = 0.3 
-    Score_treshHold = 0.8
-
-     
-
-
-    '''
-    "gen" is a generator to obtain relevant data about each frame in the sequence 
-    use loop=True to loop indefinitely over the video
-    you can pass to data_from_generator the types you want the generator to yield
-    available types:
-    'img' -> the BGR frame
-    'annot' -> the ground truth data
-    'dets' -> Mask-RCNN detections
-    'masks' -> segmentation masks from Mask-RCNN
-    '''
-    data_from_generator = ('img', 'annot', 'dets','masks','feats')
+    data_from_generator = ('img', 'annot', 'dets','masks')
     gen = annot.annot_generator(data=data_from_generator, loop=False)
 
-    FPS = 30
-    colors_tracks = get_colormap(annot.num_tracks)
-    colors_dets = get_colormap(5000)
-    nCiclo = 0
+    #Parameters of analisys
+    It = input("Select a theshHold value for the IoU [0,1]? ")
+    Iou_Treshold = float(It)
+    st = input("Select a theshHold value for the score of prediction boxes [0,1]? ")
+    Score_treshHold = float(st)
+    nma = input("Select the maximum value for countNoMatch value [0,4]? ")
+    noMatchAllowed = float(nma)
 
-    currentIDMask = 0
-
+    #Initialization 
+    nIteration = 0
+    pastboxes = []
+    listTracks = []
+    currentID = 0
+    
     while True:
-        print ('inizio frame',nCiclo)
         cur_data = next(gen)
         if cur_data == None:
             break
 
         img = cur_data['img']
 
-
-        listObjects = []
         height, width, channels = img.shape
 
         if img is None:
             break
 
-        # annot
-        if 'annot' in cur_data.keys():
-            annot = cur_data['annot']
-            tmp = []
-            cur_gt_track_ids = []
-            for track_id in annot.keys():
-                box, obj_type = annot[track_id]
-                if track_id not in listObjects:
-                    listObjects.append(track_id) 
-                a = np.zeros((height,width))
-                tmp.append({'track_id': track_id, 'box': box}) 
-                
         if 'dets' in cur_data.keys():
             dets = cur_data['dets']
             new_bs = []
@@ -272,67 +183,70 @@ def main():
                     new_bs.append(i)
                 i=i+1
 
-
-
         if 'masks' in cur_data.keys():
-            tmp = []
+            currentmasks = []
             i = 0
             masks = cur_data['masks']
             for mask in masks:
-                #img,c = vis_mask(img, mask,width,height, (0, 0, 255))
                 if i in new_bs:
-                     print(mask.astype(np.bool))
-                     tmp.append(mask.astype(np.bool))
+                     currentmassk.append(mask.astype(np.bool))
                 i=i+1
             
+            #In the first iteration save the currentmasks in the pastmasks
             if nCiclo == 0:
-                #assegnazione delle mask del frame precedente al passo zero
-                pastmask = tmp  
-            if nCiclo>0:
-                #confronto tra i box del frame precedente e quelli correnti
-                
+                pastmasks = currentmasks  
+            #In next iterations masks are first compared and then updated 
+            if nIteration>0:
+                #If currentmasks is empty it only update pastmasks with currentmasks
                 if len(tmp) > 0:
-                    mat = confrontoMask(pastmask,tmp)
-                    
+                    mat = createMatrixMasks(pastmasks,currentmask)
+                    #create a list of Tracks index empty 
                     listTrackUpdated = []
-                    
+                    #iterate until the matrix is not zereos
                     while mat.any(): 
-                        #trovo il massimo valore e gli indici di riga e colonna relativi della matrice dei confronti 
+                        #get max value of matrix and them index of row and column
                         m,r,c = getMaximumValue(mat) 
-                        #restituisce l indice se vi e un match tra un box gia presente in traccia e il box con indice r
+                        #Return index of Track where r element of pastboxes is uploaded
                         k = findTracksM(pastmask[r],listTracksM)
+                        #if it exists save this index in listTrackUpdated
                         if k >= 0:
                             listTrackUpdated.append(k) 
                         #Match
                         if m > Iou_Treshold:
-                            # se esiste una traccia attiva l aggiorna
-                            if (k >= 0) and ((listTracksM[k].state == 'active') or (listTracksM[k].state == 'new')):
-                                box = tmp[c].astype(np.uint8)
-                                listTracksM[k].boxes.append(box)
+                            #Uploading of track If it exist and them state is active or new
+                            if (k >= 0) and ((listTracks[k].state == 'active') or (listTracks[k].state == 'new')):
+                                mask = currentmasks[c].astype(np.uint8)
+                                listTracks[k].masks.append(mask)
                                 t.sequence.append(c)
-                                img = vis_mask(img, box,width,height, listTracksM[k].color)
+                                img = vis_mask(img, mask,width,height, listTracks[k].color)
                             else:
-                                t = Track(currentIDMask,nCiclo)
-                                currentIDMask = currentIDMask + 1
-                                box = tmp[c].astype(np.uint8)
-                                t.boxes.append(pastmask[r])
-                                t.boxes.append(box)
+                                t = Track(currentID,nCiclo)
+                                currentID = currentID + 1
+                                box = currentmasks[c].astype(np.uint8)
+                                t.masks.append(pastmasks[r])
+                                t.masks.append(box)
                                 t.sequence.append(r)
                                 t.sequence.append(c)
-                                listTracksM.append(t)
-                                img = vis_mask(img, box,width,height,t.color)
+                                listTracks.append(t)
+                                img = vis_mask(img, mask ,width,height,t.color)
            
+                    #A method called delete is called for active tracks that have not been updated 
                     for i in range(len(listTracks)):
-                            if (i not in listTrackUpdated) and (listTracks[i].state == 'active'):
-                                listTracks[i].delete()
+                        if (i not in listTrackUpdated) and (listTracks[i].state == 'active'):
+                            mask = listTracks[i].maks[-1]
+                            img = vis_mask(img, mask ,width,height,listTracks[i].color)
+                            listTracks[i].delete()
 
 
-            pastmask = tmp
+            pastmasks = currentmasks
         cv2.imshow('img',img)
         cv2.waitKey(1)
-        nCiclo = nCiclo+1
+        nIteration = nIteration+1
+    #All tracks calculated are saved into a database
     pickle.dump(listTracksM, open( 'database/listMask' + video_id +'.db', "wb" ) )
+
 if __name__ == ' __main__ ':
     main()
 
-main()
+#For starting program remove hashtag from main()
+#main()
