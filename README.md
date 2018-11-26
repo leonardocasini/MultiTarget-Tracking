@@ -4,7 +4,7 @@ Estimate object trajectories in an automotive context, using KITTI dataset, with
 A very detailed description of the implamentation is available in the `relazione.pdf` file (but in italian).
 
 ## Prerequisites
-The implementation has been done with the programming language Python 3.
+The implementation has been done with the programming language Python 3.Project dependencies are the following Python modules. 
 
 Requirement | Version Used
 ------------| ------------
