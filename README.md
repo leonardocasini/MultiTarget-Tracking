@@ -1,7 +1,7 @@
 # Multi-Target Tracking
 
 Estimate object trajectories in an automotive context, using KITTI dataset, with Mask-RCNN.
-A very detailed description of the implamentation is available in the relazione.pdf file (but in italian).
+A very detailed description of the implamentation is available in the `relazione.pdf` file (but in italian).
 
 ## Prerequisites
 The implementation has been done with the programming language Python 3.
