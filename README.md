@@ -16,4 +16,4 @@ opencv-python | 3.4.3.18
 
 The Mask-RCNN code is based on the following GitHub repository:
 
-- [kitti_playground](https://github.com/fedebecat/kitti_playground)
+- [fedebecat/kitti_playground](https://github.com/fedebecat/kitti_playground)
