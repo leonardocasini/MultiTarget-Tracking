@@ -1,4 +1,4 @@
-# Multi-target Tracking
+# Multi-Target Tracking
 
 Estimate object trajectories in an automotive context, using KITTI dataset, with mask RCNNs.
 A very detailed description of the implamentation is available in the relazione.pdf file (but in italian).
