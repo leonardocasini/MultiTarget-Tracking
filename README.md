@@ -1,6 +1,7 @@
 # Project Title
 
-One Paragraph of project description goes here
+Estimate object trajectories in an automotive context, using KITTI dataset, with mask RCNNs.
+A very detailed description of the implamentation is available in the relazione.pdf file (but in italian).
 
 ## Getting Started
 
@@ -16,3 +17,7 @@ matplotlib | 2.2.2
 numpy |  1.14.5 
 motmetrics | 1.1.3
 opencv-python | 3.4.3.18 
+
+The CNNs code is based on the following GitHub repos:
+
+- [kitti_playground](https://github.com/fedebecat/kitti_playground)
