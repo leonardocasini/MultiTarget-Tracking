@@ -71,7 +71,6 @@ def findTracks(box,listOfTracks,):
 
 class Track:
   def __init__(self,id = None, frame = None):
-
     self.id = id
     self.boxes = []
     self.sequence = []
@@ -175,7 +174,6 @@ def main():
             break
 
         img = cur_data['img']
-        groundTruthBoxes = []
 
         height, width, channels = img.shape
 
