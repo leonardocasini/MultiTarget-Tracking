@@ -69,8 +69,6 @@ def findTracks(box,listOfTracks,):
     return found 
 
 
-
-
 class Track:
   def __init__(self,id = None, frame = None):
 
@@ -81,11 +79,10 @@ class Track:
     self.countNoMatch = 0
     self.startingFrame = frame
     self.state = 'new'
-  #
+  #set track's state to death if countNoMatch is greater than a treshold
   def delete(self):
     self.countNoMatch = self.countNoMatch + 1 
-    if self.countNoMatch > 4:
-        print (' tracci',self.id,'morta')
+    if self.countNoMatch > noMatchAllowed:
         self.state = 'death'
 
 # Malisiewicz et al.
@@ -162,7 +159,7 @@ def main():
     Iou_Treshold = float(It)
     st = input("Select a theshHold value for the score of prediction boxes [0,1]? ")
     Score_treshHold = float(st)
-    nma = input("Select the maximum value for countNoMatch value [0,4]? ")
+    nma = input("Select the maximum value for countNoMatch value? ")
     noMatchAllowed = float(nma)
 
     #Initialization 
