@@ -10,28 +10,7 @@ import random
 import motmetrics as mm
 from math import*
 
-def vis_mask(img, mask,width,height, col, alpha=0.4, show_border=True, border_thick= -1):
-    """Visualizes a single binary mask."""
-
-    img = img.astype(np.float32)
-    idx = np.nonzero(mask)
-
-    #np.PredictionBoxes(col)
-    img[idx[0], idx[1], :] *= 1.0 - alpha
-    img[idx[0], idx[1], :] += alpha * (400/255.0)
-
-    if show_border:
-        _, contours, _ = cv2.findContours(
-            mask.copy(), cv2.RETR_CCOMP, cv2.CHAIN_APPROX_NONE)
-        #cv2.drawContours(img, contours, -1, 1, border_thick, cv2.LINE_AA)
-        #cv2.drawContours(c, contours, -1, 1, border_thick, cv2.LINE_AA)
-
-    return img.astype(np.uint8)
-
-acc = mm.MOTAccumulator(auto_id=True)
-
 def square_rooted(x):
- 
     return round(sqrt(sum([a*a for a in x])),3)
  
 def cosine_similarity(x,y):
@@ -39,7 +18,6 @@ def cosine_similarity(x,y):
     denominator = square_rooted(x)*square_rooted(y)
     return round(numerator/float(denominator),3)     
 def getArea(A):
-
     return abs(A[2] - A[0]) * abs(A[3] - A[1])
 def IntersectionOverUnion(box1,box2,boxInt):
 
@@ -49,9 +27,6 @@ def IntersectionOverUnion(box1,box2,boxInt):
     print ('a',getArea(box1) ,'b',getArea(box2))
     print ("gesuuuuuuuuuuu",inter, 'union', union )
     return inter/union
-
-
-
 
 def findIntersection(A,B):
     C = np.zeros((height,width))
@@ -178,7 +153,6 @@ class Track:
     self.countNoMatch = 0
     self.state = 'active'
     self.frame = frame 
-
   def delete(self):
     self.countNoMatch = self.countNoMatch + 1 
     if self.countNoMatch > 2:
