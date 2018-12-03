@@ -6,9 +6,9 @@ A very detailed description of the implamentation is available in the `relazione
 ![TestImage1](./images/image1.png)
 ## Usage
 Three python scripts, each with different functions:
- * #### Kitti-dets : #### Calcute tracks with predicted boxes and accuracy with motmetrics library
- * Kitti-mask
- * kitti-features
+ * Kitti-dets : Calcute tracks with predicted boxes and accuracy with motmetrics library.
+ * Kitti-mask : Calcute tracks with masks.
+ * kitti-features : Calcute tracks with features vectors.
 
 
 ## Prerequisites
