@@ -189,7 +189,7 @@ def main():
             masks = cur_data['masks']
             for mask in masks:
                 if i in new_bs:
-                     currentmassk.append(mask.astype(np.bool))
+                     currentmasks.append(mask.astype(np.bool))
                 i=i+1
             
             #In the first iteration save the currentmasks in the pastmasks
@@ -207,7 +207,7 @@ def main():
                         #get max value of matrix and them index of row and column
                         m,r,c = getMaximumValue(mat) 
                         #Return index of Track where r element of pastboxes is uploaded
-                        k = findTracksM(pastmask[r],listTracksM)
+                        k = findTracks(pastmask[r],listTracksM)
                         #if it exists save this index in listTrackUpdated
                         if k >= 0:
                             listTrackUpdated.append(k) 
@@ -215,8 +215,12 @@ def main():
                         if m > Iou_Treshold:
                             #Uploading of track If it exist and them state is active or new
                             if (k >= 0) and ((listTracks[k].state == 'active') or (listTracks[k].state == 'new')):
+                                if (listTracks[k].state == 'dying'):
+                                    listTracks[k].countNoMatch = 0
                                 mask = currentmasks[c].astype(np.uint8)
+                                listTracks[k].state = 'active'
                                 listTracks[k].masks.append(mask)
+                                listTracks[k].sequence.append(c)
                                 t.sequence.append(c)
                                 img = vis_mask(img, mask,width,height, listTracks[k].color)
                             else:
@@ -236,7 +240,6 @@ def main():
                             mask = listTracks[i].maks[-1]
                             img = vis_mask(img, mask ,width,height,listTracks[i].color)
                             listTracks[i].delete()
-
 
             pastmasks = currentmasks
         cv2.imshow('img',img)
