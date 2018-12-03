@@ -60,11 +60,10 @@ def eraseColumnAndRow(A,r,c):
     
 
 #This function return the index of track in listTrack 
-#if the last box saved is equal the selected box
+#if the last box saved is similar to selected box
 def findTracks(box,listOfTracks,):
     found = -1 
-    for k in range(len(listOfTracks)):
-        if box == listOfTracks[k].boxes[-1]:
+    if bb_intersection_over_union(box,listOfTracks[k].boxes[len(listOfTracks[k].boxes) - 1]) > 0.7:
             found = k
     return found 
 
@@ -81,7 +80,8 @@ class Track:
   #set track's state to death if countNoMatch is greater than a treshold
   def delete(self):
     self.countNoMatch = self.countNoMatch + 1 
-    if self.countNoMatch > noMatchAllowed:
+    self.state = 'dying'
+    if self.countNoMatch > self.nma: #4 di default
         self.state = 'death'
 
 # Malisiewicz et al.
@@ -230,6 +230,8 @@ def main():
                         if m > Iou_Treshold:
                             #Uploading of track If it exist and them state is active or new
                             if (k >= 0) and ((listTracks[k].state == 'active') or (listTracks[k].state == 'new')) :
+                                if (listTracks[k].state == 'dying'):
+                                    listTracks[k].countNoMatch = 0
                                 box = currentboxes[c]
                                 listTracks[k].state = 'active'
                                 listTracks[k].boxes.append(box)
@@ -256,7 +258,7 @@ def main():
 
                     #A method called delete is called for active tracks that have not been updated 
                     for i in range(len(listTracks)):
-                        if (i not in listTrackUpdated) and (listTracks[i].state == 'active'):
+                        if (i not in listTrackUpdated) and (listTracks[i].state == 'active') or (listTracks[i].state == 'dying'):
                             box = listTracks[i].boxes[-1]
                             cv2.rectangle(img,(box[0], box[1]), (box[2], box[3]),listTracks[i].color, thickness = 6)
                             cv2.putText(img,str(listTracks[i].id),(box[0], box[1]), cv2.FONT_HERSHEY_SIMPLEX, 1, listTracks[i].color, 2)
