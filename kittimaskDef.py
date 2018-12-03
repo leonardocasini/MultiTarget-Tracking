@@ -35,13 +35,13 @@ def eraseColumnAndRow(A,r,c):
     for j in range(len(A[0])):#riga
         A[r][j] = 0
     
-def findTracks(mask,listOfTracksM):
+def findTracks(mask,listOfTracks):
     found = -1 
-    for k in range(len(listOfTracksM)):
-        if (mask == listOfTracksM[k].masks[len(listOfTracksM[k].masks) - 1]).all():
-            found = k
-    return found 
-
+    A = mask
+    B = listOfTracks[k].boxes[- 1]
+    if np.sum(np.logical_and(A[i], B[j])) / np.sum(np.logical_or(A[i], B[j])).astype(np.float) > 0.7:
+        found = k
+    return found
 class Track:
   def __init__(self,id = None,frame = None):
 
