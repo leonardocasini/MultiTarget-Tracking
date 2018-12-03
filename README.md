@@ -6,7 +6,7 @@ A very detailed description of the implamentation is available in the `relazione
 ![TestImage1](./images/image1.png)
 ## Usage
 Three python scripts, each with different functions:
- * Kitti-dets
+ * ### Kitti-dets : 
  * Kitti-mask
  * kitti-features
 
