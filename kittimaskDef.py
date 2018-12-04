@@ -219,7 +219,6 @@ def main():
                             #Uploading of track If it exist and them state is active or new
                             if (k >= 0) and ((listTracks[k].state == 'active') or (listTracks[k].state == 'new') or (listTracks[k].state == 'dying')):
                                 if (listTracks[k].state == 'dying'):
-                                    print('aoooooofafsafasf')
                                     listTracks[k].countNoMatch = 0
                                 mask = currentmasks[c].astype(np.uint8)
                                 listTracks[k].state = 'active'
