@@ -8,7 +8,6 @@ import csv
 import pickle
 import random
 import motmetrics as mm
-import csv
 
 
 def bb_intersection_over_union(boxA, boxB):
@@ -61,20 +60,17 @@ def eraseColumnAndRow(A,r,c):
     
 
 #This function return the index of track in listTrack 
-#if the last box saved is equal the selected box
+#if the last box saved is similar to selected box
 def findTracks(box,listOfTracks,):
     found = -1 
     for k in range(len(listOfTracks)):
-        if box == listOfTracks[k].boxes[-1]:
-            found = k
+        if bb_intersection_over_union(box,listOfTracks[k].boxes[len(listOfTracks[k].boxes) - 1]) > 0.7:
+            found = k 
     return found 
 
 
-
-
 class Track:
-  def __init__(self,id = None, frame = None):
-
+  def __init__(self,id = None, frame = None,noMatchAllowed=None):
     self.id = id
     self.boxes = []
     self.sequence = []
@@ -82,11 +78,12 @@ class Track:
     self.countNoMatch = 0
     self.startingFrame = frame
     self.state = 'new'
-  #
+    self.nma = noMatchAllowed
+  #set track's state to death if countNoMatch is greater than a treshold
   def delete(self):
     self.countNoMatch = self.countNoMatch + 1 
-    if self.countNoMatch > 4:
-        print (' tracci',self.id,'morta')
+    self.state = 'dying'
+    if self.countNoMatch > self.nma: 
         self.state = 'death'
 
 # Malisiewicz et al.
@@ -159,9 +156,12 @@ def main():
     gen = annot.annot_generator(data=data_from_generator, loop=False)
 
     #Parameters of analisys
-    Iou_Treshold = input("Select a theshHold value for the IoU [0,1]? ")
-    Score_treshHold = input("Select a theshHold value for the score of prediction boxes [0,1]? ")
-    noMatchAllowed = input("Select the maximum value for countNoMatch value [0,4]? ")
+    It = input("Select a theshHold value for the IoU [0,1]? ")
+    Iou_Treshold = float(It)
+    st = input("Select a theshHold value for the score of prediction boxes [0,1]? ")
+    Score_treshHold = float(st)
+    nma = input("Select the maximum value for countNoMatch value? ")
+    noMatchAllowed = float(nma)
 
     #Initialization 
     nIteration = 0
@@ -176,7 +176,6 @@ def main():
             break
 
         img = cur_data['img']
-        groundTruthBoxes = []
 
         height, width, channels = img.shape
 
@@ -189,9 +188,7 @@ def main():
             cur_gt_track_ids = []
 
             for track_id in annot.keys():
-                
                 box, obj_type = annot[track_id]
-                print(obj_type)
                 if ((obj_type == 'Car') or (obj_type == 'Van')):
                     cur_gt_track_ids.append(track_id)
                     a = np.zeros((height,width))
@@ -233,6 +230,8 @@ def main():
                         if m > Iou_Treshold:
                             #Uploading of track If it exist and them state is active or new
                             if (k >= 0) and ((listTracks[k].state == 'active') or (listTracks[k].state == 'new')) :
+                                if (listTracks[k].state == 'dying'):
+                                    listTracks[k].countNoMatch = 0
                                 box = currentboxes[c]
                                 listTracks[k].state = 'active'
                                 listTracks[k].boxes.append(box)
@@ -242,7 +241,7 @@ def main():
                                 cv2.putText(img,str(listTracks[k].id),(box[0], box[1]), cv2.FONT_HERSHEY_SIMPLEX, 1, listTracks[k].color, 2)
                             #In other case a new track is created 
                             else:
-                                t = Track(currentID,nIteration)
+                                t = Track(currentID,nIteration,noMatchAllowed)
                                 currentID = currentID + 1
                                 box = currentboxes[c]
                                 #During creation both of boxesis saved
@@ -259,7 +258,7 @@ def main():
 
                     #A method called delete is called for active tracks that have not been updated 
                     for i in range(len(listTracks)):
-                        if (i not in listTrackUpdated) and (listTracks[i].state == 'active'):
+                        if (i not in listTrackUpdated) and (listTracks[i].state == 'active') or (listTracks[i].state == 'dying'):
                             box = listTracks[i].boxes[-1]
                             cv2.rectangle(img,(box[0], box[1]), (box[2], box[3]),listTracks[i].color, thickness = 6)
                             cv2.putText(img,str(listTracks[i].id),(box[0], box[1]), cv2.FONT_HERSHEY_SIMPLEX, 1, listTracks[i].color, 2)
