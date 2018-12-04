@@ -63,13 +63,14 @@ def eraseColumnAndRow(A,r,c):
 #if the last box saved is similar to selected box
 def findTracks(box,listOfTracks,):
     found = -1 
-    if bb_intersection_over_union(box,listOfTracks[k].boxes[len(listOfTracks[k].boxes) - 1]) > 0.7:
-            found = k
+    for k in range(len(listOfTracks)):
+        if bb_intersection_over_union(box,listOfTracks[k].boxes[len(listOfTracks[k].boxes) - 1]) > 0.7:
+            found = k 
     return found 
 
 
 class Track:
-  def __init__(self,id = None, frame = None):
+  def __init__(self,id = None, frame = None,noMatchAllowed=None):
     self.id = id
     self.boxes = []
     self.sequence = []
@@ -77,11 +78,12 @@ class Track:
     self.countNoMatch = 0
     self.startingFrame = frame
     self.state = 'new'
+    self.nma = noMatchAllowed
   #set track's state to death if countNoMatch is greater than a treshold
   def delete(self):
     self.countNoMatch = self.countNoMatch + 1 
     self.state = 'dying'
-    if self.countNoMatch > self.nma: #4 di default
+    if self.countNoMatch > self.nma: 
         self.state = 'death'
 
 # Malisiewicz et al.
@@ -186,9 +188,7 @@ def main():
             cur_gt_track_ids = []
 
             for track_id in annot.keys():
-                
                 box, obj_type = annot[track_id]
-                print(obj_type)
                 if ((obj_type == 'Car') or (obj_type == 'Van')):
                     cur_gt_track_ids.append(track_id)
                     a = np.zeros((height,width))
@@ -241,7 +241,7 @@ def main():
                                 cv2.putText(img,str(listTracks[k].id),(box[0], box[1]), cv2.FONT_HERSHEY_SIMPLEX, 1, listTracks[k].color, 2)
                             #In other case a new track is created 
                             else:
-                                t = Track(currentID,nIteration)
+                                t = Track(currentID,nIteration,noMatchAllowed)
                                 currentID = currentID + 1
                                 box = currentboxes[c]
                                 #During creation both of boxesis saved
@@ -312,7 +312,7 @@ if __name__ == ' __main__ ':
     main()
 
 #For starting program remove hashtag from main()
-#main()
+main()
 
 
 
