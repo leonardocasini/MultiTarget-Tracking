@@ -38,12 +38,13 @@ def eraseColumnAndRow(A,r,c):
 def findTracks(mask,listOfTracks):
     found = -1 
     A = mask
-    B = listOfTracks[k].boxes[- 1]
-    if np.sum(np.logical_and(A[i], B[j])) / np.sum(np.logical_or(A[i], B[j])).astype(np.float) > 0.7:
-        found = k
+    for k in range(len(listOfTracks)):
+        B = listOfTracks[k].masks[-1]
+        if np.sum(np.logical_and(A, B)) / np.sum(np.logical_or(A, B)).astype(np.float) > 0.6:
+            found = k
     return found
 class Track:
-  def __init__(self,id = None,frame = None):
+  def __init__(self,id = None,frame = None,noMatchAllowed=None):
 
     self.id = id
     self.frame = frame
@@ -52,12 +53,14 @@ class Track:
     self.color = tuple([int(x) for x in np.random.choice(range(256), size=3)])
     self.countNoMatch = 0
     self.state = 'new'
+    self.nma = noMatchAllowed
 
   #This function return the index of track in listTrack 
   #if the last mask saved is equal the selected mask
   def delete(self):
     self.countNoMatch = self.countNoMatch + 1 
-    if self.countNoMatch > 2:
+    self.state = 'dying'
+    if self.countNoMatch > self.nma: 
         self.state = 'death'
 
 # Malisiewicz et al.
@@ -193,13 +196,13 @@ def main():
                 i=i+1
             
             #In the first iteration save the currentmasks in the pastmasks
-            if nCiclo == 0:
+            if nIteration == 0:
                 pastmasks = currentmasks  
             #In next iterations masks are first compared and then updated 
             if nIteration>0:
                 #If currentmasks is empty it only update pastmasks with currentmasks
-                if len(tmp) > 0:
-                    mat = createMatrixMasks(pastmasks,currentmask)
+                if len(currentmasks) > 0:
+                    mat = createMatrixMasks(pastmasks,currentmasks)
                     #create a list of Tracks index empty 
                     listTrackUpdated = []
                     #iterate until the matrix is not zereos
@@ -207,15 +210,16 @@ def main():
                         #get max value of matrix and them index of row and column
                         m,r,c = getMaximumValue(mat) 
                         #Return index of Track where r element of pastboxes is uploaded
-                        k = findTracks(pastmask[r],listTracksM)
+                        k = findTracks(pastmasks[r],listTracks)
                         #if it exists save this index in listTrackUpdated
                         if k >= 0:
                             listTrackUpdated.append(k) 
                         #Match
                         if m > Iou_Treshold:
                             #Uploading of track If it exist and them state is active or new
-                            if (k >= 0) and ((listTracks[k].state == 'active') or (listTracks[k].state == 'new')):
+                            if (k >= 0) and ((listTracks[k].state == 'active') or (listTracks[k].state == 'new') or (listTracks[k].state == 'dying')):
                                 if (listTracks[k].state == 'dying'):
+                                    print('aoooooofafsafasf')
                                     listTracks[k].countNoMatch = 0
                                 mask = currentmasks[c].astype(np.uint8)
                                 listTracks[k].state = 'active'
@@ -224,7 +228,7 @@ def main():
                                 t.sequence.append(c)
                                 img = vis_mask(img, mask,width,height, listTracks[k].color)
                             else:
-                                t = Track(currentID,nCiclo)
+                                t = Track(currentID,nIteration,noMatchAllowed)
                                 currentID = currentID + 1
                                 box = currentmasks[c].astype(np.uint8)
                                 t.masks.append(pastmasks[r])
@@ -236,9 +240,7 @@ def main():
            
                     #A method called delete is called for active tracks that have not been updated 
                     for i in range(len(listTracks)):
-                        if (i not in listTrackUpdated) and (listTracks[i].state == 'active'):
-                            mask = listTracks[i].maks[-1]
-                            img = vis_mask(img, mask ,width,height,listTracks[i].color)
+                        if (i not in listTrackUpdated) and (listTracks[i].state == 'active') or (listTracks[i].state == 'dying'):
                             listTracks[i].delete()
 
             pastmasks = currentmasks
