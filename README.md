@@ -9,6 +9,7 @@ Three python scripts, each with different functions:
  * Kitti-dets : Calcute tracks with predicted boxes and accuracy with motmetrics library.
  * Kitti-mask : Calcute tracks with masks.
  * kitti-features : Calcute tracks with features vectors.
+User opens a selected script and leaves hashtag from main in final line of code and can insert the parameters of IouTheshold, ScoreTreshold and NoMatchAllowed from console. 
 
 
 ## Prerequisites
